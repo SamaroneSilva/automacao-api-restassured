@@ -1,0 +1,25 @@
+# Arquivos compilados do Java/Maven
+/target/
+*.class
+*.jar
+*.war
+
+# Arquivos de Log
+*.log
+
+# Arquivos do IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# Arquivos do Eclipse
+.project
+.classpath
+.settings/
+
+# Arquivos do VS Code
+.vscode/
+
+# Arquivos de sistema (Windows/macOS)
+Thumbs.db
+.DS_Store
