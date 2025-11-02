@@ -25,7 +25,6 @@ jobs:
           cache: 'maven' 
 
       - name: Executar os testes com Maven
-        # Roda os testes, que geram os dados em 'target/allure-results'
         run: mvn clean test || true
 
       - name: Listar arquivos para Debug (Verificar allure-results)
@@ -34,27 +33,24 @@ jobs:
           echo "Listando conteúdo de target/allure-results/ (deve ter 3 resultados)"
           ls -l target/allure-results/
 
-      # --- [MUDANÇA AQUI] ---
+      # --- [AQUI ESTÁ A CORREÇÃO] ---
       - name: Instalar o Allure CLI
-        # Esta é a action oficial para instalar o Allure
+        # Trocamos 'allure-action@v1' pela 'setup-allurectl@v1'
         if: always()
-        uses: allure-framework/allure-action@v1
+        uses: allure-framework/setup-allurectl@v1
+      # --- [FIM DA CORREÇÃO] ---
 
       - name: Gerar Relatório Allure (via CLI)
         if: always()
         run: |
           echo "Gerando o relatório com o Allure CLI..."
-          # Roda o comando nativo do Allure:
-          # Lê de 'target/allure-results' (onde sabemos que os 3 testes estão)
-          # Escreve em 'allure-report' (a pasta que o deploy precisa)
+          # Este comando agora funcionará pois o step anterior instalou o 'allure'
           allure generate target/allure-results -o allure-report --clean
-      # --- [FIM DA MUDANÇA] ---
 
       - name: Deploy do Relatório para GitHub Pages
         if: (always() && github.ref == 'refs/heads/main')
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # A pasta de publicação continua sendo 'allure-report'
           publish_dir: allure-report
           force_orphan: true
