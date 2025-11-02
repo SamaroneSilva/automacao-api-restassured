@@ -31,17 +31,16 @@ jobs:
         if: always()
         uses: simple-elf/allure-report-action@v1.7
         with:
-          results_path: allure-results
+          # [A CORREÇÃO ESTÁ AQUI]
+          # Deve ler da pasta 'target' onde o pom.xml salvou
+          results_path: target/allure-results
           report_path: allure-report
 
-      # --- [AQUI ESTÁ A MUDANÇA] ---
       - name: Deploy do Relatório para GitHub Pages
         if: (always() && github.ref == 'refs/heads/main')
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report
-          
-          # Esta opção força a recriação da branch gh-pages
-          # Isso limpa 100% o cache do site antigo.
+          # Força a limpeza do cache do site
           force_orphan: true
