@@ -1,23 +1,29 @@
 package tests;
 
 import config.BaseTest;
-import io.restassured.response.Response; // Precisamos importar a classe Response
-import org.junit.jupiter.api.Assertions; // Precisamos importar o Assertions do JUnit
+import io.restassured.response.Response;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*; // Importante para os validadores (equalTo, etc.)
+// --- Imports do Allure ---
+import io.qameta.allure.Description;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Step;
+// -------------------------
 
+import static io.restassured.RestAssured.*;
+import static org.hamcrest.Matchers.*;
+
+@Feature("Produtos - Testes de Leitura (GET)") // [Allure] Agrupa todos os testes desta classe
 public class ProductTest extends BaseTest {
 
     @Test
+    @Description("Deve buscar a lista completa de produtos e validar um item específico (ID 4) na lista.")
     public void deveBuscarProdutosComSucesso() {
         System.out.println("Iniciando o teste: deveBuscarProdutosComSucesso");
 
         // [1] Executamos a requisição
-        Response resposta = given()
-                .when()
-                .get("/products");
+        Response resposta = executarBuscaDeProdutos();
 
         // [2] Validamos o status code
         validarStatusCodeEsperado(resposta, 200);
@@ -28,54 +34,51 @@ public class ProductTest extends BaseTest {
         System.out.println("Teste 'deveBuscarProdutosComSucesso' finalizado!");
     }
 
-    // --- NOSSO NOVO CENÁRIO DE TESTE ---
-
     @Test
+    @Description("Deve buscar um produto específico pelo ID (ID 4) e validar todo o seu corpo.")
     public void deveBuscarProdutoEspecificoPorId() {
         System.out.println("Iniciando o teste: deveBuscarProdutoEspecificoPorId");
 
-        // ID que queremos buscar (o "Teclado Automator")
         String idProduto = "4";
 
         // [1] Executamos a requisição
-        Response resposta = given()
-                .pathParam("id", idProduto) // [A] Passamos o ID como parâmetro de caminho
-                .when()
-                .get("/products/{id}"); // [B] Usamos {id} no endpoint
+        Response resposta = executarBuscaDeProdutoPorId(idProduto);
 
         // [2] Validamos o status code
         validarStatusCodeEsperado(resposta, 200);
 
         // [3] Validamos o corpo da resposta (Body)
-        System.out.println("Validando o corpo do produto ID: " + idProduto);
-
-        // Como a resposta é um objeto (não uma lista),
-        // validamos os campos diretamente
-        resposta.then().body(
-                "id", equalTo(idProduto),
-                "name", equalTo("Teclado Automator"),
-                "price", equalTo(499.9f),
-                "category", equalTo("Periféricos")
-        );
+        validarCorpoProdutoEspecifico(resposta, idProduto);
 
         System.out.println("Teste 'deveBuscarProdutoEspecificoPorId' finalizado!");
     }
 
 
-    // --- MÉTODOS AUXILIARES ---
+    // --- MÉTODOS AUXILIARES (AGORA COM @Step) ---
+    // Cada @Step vira um item clicável no relatório
 
-    /**
-     * Método auxiliar simples para validar o Status Code de uma resposta.
-     */
+    @Step("Executar requisição GET para /products")
+    private Response executarBuscaDeProdutos() {
+        return given()
+                .when()
+                .get("/products");
+    }
 
+    @Step("Executar requisição GET para /products/{idProduto}")
+    private Response executarBuscaDeProdutoPorId(String idProduto) {
+        return given()
+                .pathParam("id", idProduto)
+                .when()
+                .get("/products/{id}");
+    }
+
+    @Step("Validar Status Code esperado: {statusCodeEsperado}")
     private void validarStatusCodeEsperado(Response resposta, int statusCodeEsperado) {
         System.out.println("Validando status code...");
         resposta.then().statusCode(statusCodeEsperado);
     }
 
-    /**
-     * Método auxiliar para validar campos principais de um item específico na resposta (lista).
-     */
+    @Step("Validar campos principais (Nome e Preço) do produto ID: {idProduto} na lista")
     private void validarCamposPrincipaisDoProduto(Response resposta, String idProduto, String nomeProduto, float precoProduto) {
         System.out.println("Validando campos principais do produto ID: " + idProduto);
 
@@ -85,5 +88,14 @@ public class ProductTest extends BaseTest {
         );
     }
 
-
+    @Step("Validar corpo completo do produto ID: {idProduto}")
+    private void validarCorpoProdutoEspecifico(Response resposta, String idProduto) {
+        System.out.println("Validando o corpo do produto ID: " + idProduto);
+        resposta.then().body(
+                "id", equalTo(idProduto),
+                "name", equalTo("Teclado Automator"),
+                "price", equalTo(499.9f),
+                "category", equalTo("Periféricos")
+        );
+    }
 }
