@@ -21,30 +21,30 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'maven'
+          # [MUDANÇA] Desabilitei o cache do Maven para forçar tudo novo
+          # cache: 'maven'
 
       - name: Executar os testes com Maven
-        # Limpa o 'target' e roda os testes
         run: mvn clean test || true
-        
-        # --- [NOVO STEP DE DEBUG] ---
+
       - name: Listar arquivos para Debug (Verificar allure-results)
-        if: always() # Roda mesmo se o teste falhar
+        if: always()
         run: |
-          echo "Listando conteúdo da pasta target/"
-          ls -l target/
-          echo "-----------------------------------"
           echo "Listando conteúdo da pasta target/allure-results/"
           ls -l target/allure-results/
 
-      # --- [FIM DO STEP DE DEBUG] --
+      # --- [NOVO STEP DE LIMPEZA] ---
+      - name: Limpar cache de relatório antigo
+        if: always()
+        run: |
+          echo "Removendo a pasta 'allure-report' antiga, se existir..."
+          rm -rf allure-report
+      # --- [FIM DO STEP DE LIMPEZA] ---
 
       - name: Gerar Relatório Allure
         if: always()
         uses: simple-elf/allure-report-action@v1.7
         with:
-          # [A CORREÇÃO ESTÁ AQUI]
-          # Deve ler da pasta 'target' onde o pom.xml salvou
           results_path: target/allure-results
           report_path: allure-report
 
@@ -54,5 +54,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./allure-report
-          # Força a limpeza do cache do site
           force_orphan: true
