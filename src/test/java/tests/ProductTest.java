@@ -11,87 +11,69 @@ import io.qameta.allure.Feature;
 import io.qameta.allure.Step;
 // -------------------------
 
-import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*;
-
 import java.util.HashMap;
 import java.util.Map;
 
 import static io.restassured.RestAssured.*;
-import static org.hamcrest.Matchers.*; // Para as validações (equalTo, notNullValue)
+import static org.hamcrest.Matchers.*;
 
-
-@Feature("Produtos - Testes de Leitura (GET)") // [Allure] Agrupa todos os testes desta classe
+// [MUDANÇA] Mudei o @Feature para um nome mais genérico, já que agora temos POST
+@Feature("Produtos - API")
 public class ProductTest extends BaseTest {
 
+    // --- [TESTE POST (AGORA REFATORADO)] ---
     @Test
+    // Adicionei uma @Description para manter o padrão
+    @Description("CT-03-Deve criar um novo produto com sucesso")
     public void deveCriarNovoProdutoComSucesso() {
         System.out.println("Iniciando o teste: deveCriarNovoProdutoComSucesso");
 
         // [1] Montar o corpo (payload) da requisição
-        // Usamos um 'Map' que o Rest Assured converte para JSON
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("name", "Novo Teclado (Teste POST)");
-        payload.put("price", 299.99f); // 'f' indica número decimal (float)
-        payload.put("category", "Periféricos");
-        payload.put("description", "Produto criado via automação");
+        Map<String, Object> payload = montarPayloadProduto("Novo Head Phone (Teste POST)", 299.99f);
 
-        // [2] Executar a requisição e validar a resposta
-        given()
-                // (Dado que)
-                .header("Content-Type", "application/json") // Informamos que estamos enviando JSON
-                .body(payload) // Anexamos nosso 'payload' ao corpo
-                .when()
-                // (Quando)
-                .post("/products") // Executamos o método POST no endpoint
-                .then()
-                // (Então)
-                .statusCode(201) // Validamos que o status foi 201 (Created)
-                .body("name", equalTo("Novo Teclado (Teste POST)")) // Validamos o 'name'
-                .body("id", is(notNullValue())); // Validamos que a API gerou um 'id'
+        // [2] Executar a requisição
+        Response resposta = executarPostProduto(payload);
+
+        // [3] Validar o Status Code
+        validarStatusCodeEsperado(resposta, 201); // 201 Created
+
+        // [4] Validar o corpo da resposta
+        validarCorpoRespostaPost(resposta, "Novo Head Phone (Teste POST)");
 
         System.out.println("Teste 'deveCriarNovoProdutoComSucesso' finalizado!");
     }
 
+    // --- TESTE GET (LISTA) ---
     @Test
     @Description("CT-01-Deve buscar a lista completa de produtos e validar um item específico (ID 4) na lista.")
     public void deveBuscarProdutosComSucesso() {
         System.out.println("Iniciando o teste: deveBuscarProdutosComSucesso");
 
-        // [1] Executamos a requisição
         Response resposta = executarBuscaDeProdutos();
-
-        // [2] Validamos o status code
         validarStatusCodeEsperado(resposta, 200);
-
-        // [3] Validamos os campos principais do body
         validarCamposPrincipaisDoProduto(resposta, "4", "Teclado Automator", 499.9f);
 
         System.out.println("Teste 'deveBuscarProdutosComSucesso' finalizado!");
     }
 
+    // --- TESTE GET (POR ID) ---
     @Test
     @Description("CT-02-Deve buscar um produto específico pelo ID (ID 4) e validar todo o seu corpo.")
     public void deveBuscarProdutoEspecificoPorId() {
         System.out.println("Iniciando o teste: deveBuscarProdutoEspecificoPorId");
 
         String idProduto = "4";
-
-        // [1] Executamos a requisição
         Response resposta = executarBuscaDeProdutoPorId(idProduto);
-
-        // [2] Validamos o status code
         validarStatusCodeEsperado(resposta, 200);
-
-        // [3] Validamos o corpo da resposta (Body)
         validarCorpoProdutoEspecifico(resposta, idProduto);
 
         System.out.println("Teste 'deveBuscarProdutoEspecificoPorId' finalizado!");
     }
 
 
-    // --- MÉTODOS AUXILIARES (AGORA COM @Step) ---
-    // Cada @Step vira um item clicável no relatório
+    // --- MÉTODOS AUXILIARES (COM @Step) ---
+
+    // Métodos de Requisição (Given/When)
 
     @Step("Executar requisição GET para /products")
     private Response executarBuscaDeProdutos() {
@@ -107,6 +89,29 @@ public class ProductTest extends BaseTest {
                 .when()
                 .get("/products/{id}");
     }
+
+    // [NOVO MÉTODO AUXILIAR]
+    @Step("Montar payload do produto: {nome} - {preco}")
+    private Map<String, Object> montarPayloadProduto(String nome, float preco) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("name", nome);
+        payload.put("price", preco);
+        payload.put("category", "Periféricos");
+        payload.put("description", "Produto criado via automação");
+        return payload;
+    }
+
+    // [NOVO MÉTODO AUXILIAR]
+    @Step("Executar requisição POST para /products")
+    private Response executarPostProduto(Map<String, Object> payload) {
+        return given()
+                .header("Content-Type", "application/json")
+                .body(payload)
+                .when()
+                .post("/products");
+    }
+
+    // Métodos de Validação (Then)
 
     @Step("Validar Status Code esperado: {statusCodeEsperado}")
     private void validarStatusCodeEsperado(Response resposta, int statusCodeEsperado) {
@@ -132,6 +137,16 @@ public class ProductTest extends BaseTest {
                 "name", equalTo("Teclado Automator"),
                 "price", equalTo(499.9f),
                 "category", equalTo("Periféricos")
+        );
+    }
+
+    // [NOVO MÉTODO AUXILIAR]
+    @Step("Validar corpo da resposta da criação para o produto: {nomeProduto}")
+    private void validarCorpoRespostaPost(Response resposta, String nomeProduto) {
+        System.out.println("Validando corpo da resposta do POST...");
+        resposta.then().body(
+                "name", equalTo(nomeProduto),
+                "id", is(notNullValue())
         );
     }
 }
