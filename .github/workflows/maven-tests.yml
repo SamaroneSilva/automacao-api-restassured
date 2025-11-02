@@ -36,12 +36,18 @@ jobs:
       - name: Instalar o Allure Controller (allurectl)
         if: always()
         uses: allure-framework/setup-allurectl@v1
-        # Este step NÃO instala o 'allure', apenas o 'allurectl'
 
       # --- [AQUI ESTÁ A CORREÇÃO] ---
-      - name: Instalar o Allure CLI (usando o allurectl)
+      - name: Instalar o Allure CLI e Adicionar ao PATH
         if: always()
-        run: allurectl install
+        run: |
+          echo "Instalando o Allure CLI (comando 'allure')..."
+          # 1. Instala o Allure na pasta $HOME/.allure/bin
+          allurectl install
+          
+          echo "Adicionando o Allure ao GITHUB_PATH..."
+          # 2. Adiciona essa pasta ao PATH do workflow
+          echo "$HOME/.allure/bin" >> $GITHUB_PATH
       # --- [FIM DA CORREÇÃO] ---
 
       - name: Gerar Relatório Allure (via CLI)
