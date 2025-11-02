@@ -5,10 +5,10 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:
 
+# [NOVO] Adiciona permissões para o job poder escrever no GitHub Pages
 permissions:
-  contents: write 
+  contents: write # Permite o checkout e o push para a branch gh-pages
 
 jobs:
   build-and-test:
@@ -22,45 +22,27 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'maven' 
+          cache: 'maven'
 
       - name: Executar os testes com Maven
-        run: mvn clean test || true
+        run: mvn test || true
 
-      - name: Listar arquivos para Debug (Verificar allure-results)
+      - name: Gerar Relatório Allure
         if: always()
-        run: |
-          echo "Listando conteúdo de target/allure-results/"
-          ls -l target/allure-results/
+        uses: simple-elf/allure-report-action@v1.7
+        with:
+          results_path: allure-results
+          report_path: allure-report # O relatório será gerado na pasta 'allure-report'
 
-      - name: Instalar o Allure Controller (allurectl)
-        if: always()
-        uses: allure-framework/setup-allurectl@v1
-
-      # --- [AQUI ESTÁ A CORREÇÃO] ---
-      - name: Instalar o Allure CLI e Adicionar ao PATH
-        if: always()
-        run: |
-          echo "Instalando o Allure CLI (comando 'allure')..."
-          # 1. Instala o Allure na pasta $HOME/.allure/bin
-          allurectl install
-          
-          echo "Adicionando o Allure ao GITHUB_PATH..."
-          # 2. Adiciona essa pasta ao PATH do workflow
-          echo "$HOME/.allure/bin" >> $GITHUB_PATH
-      # --- [FIM DA CORREÇÃO] ---
-
-      - name: Gerar Relatório Allure (via CLI)
-        if: always()
-        run: |
-          echo "Gerando o relatório com o Allure CLI..."
-          # Este comando 'allure' agora VAI funcionar
-          allure generate target/allure-results -o allure-report --clean
-
+      # [MUDANÇA] Em vez de 'upload-artifact', vamos 'deploy'
       - name: Deploy do Relatório para GitHub Pages
+        # Só executa este passo se o build for na branch 'main'
         if: (always() && github.ref == 'refs/heads/main')
         uses: peaceiris/actions-gh-pages@v3
         with:
+          # Token que o GitHub Actions usa para autenticar
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: allure-report
-          force_orphan: true
+          # Pasta que contém o relatório HTML (o mesmo do step anterior)
+          publish_dir: ./allure-report
+          # Opcional: mantém o histórico da branch gh-pages limpo
+          keep_files: false
