@@ -26,6 +26,18 @@ jobs:
       - name: Executar os testes com Maven
         # Limpa o 'target' e roda os testes
         run: mvn clean test || true
+        
+        # --- [NOVO STEP DE DEBUG] ---
+      - name: Listar arquivos para Debug (Verificar allure-results)
+        if: always() # Roda mesmo se o teste falhar
+        run: |
+          echo "Listando conteúdo da pasta target/"
+          ls -l target/
+          echo "-----------------------------------"
+          echo "Listando conteúdo da pasta target/allure-results/"
+          ls -l target/allure-results/
+
+      # --- [FIM DO STEP DE DEBUG] --
 
       - name: Gerar Relatório Allure
         if: always()
