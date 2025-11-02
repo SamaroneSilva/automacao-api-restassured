@@ -18,7 +18,7 @@ import static org.hamcrest.Matchers.*;
 public class ProductTest extends BaseTest {
 
     @Test
-    @Description("Deve buscar a lista completa de produtos e validar um item específico (ID 4) na lista.")
+    @Description("CT-01-Deve buscar a lista completa de produtos e validar um item específico (ID 4) na lista.")
     public void deveBuscarProdutosComSucesso() {
         System.out.println("Iniciando o teste: deveBuscarProdutosComSucesso");
 
@@ -35,7 +35,7 @@ public class ProductTest extends BaseTest {
     }
 
     @Test
-    @Description("Deve buscar um produto específico pelo ID (ID 4) e validar todo o seu corpo.")
+    @Description("CT-02-Deve buscar um produto específico pelo ID (ID 4) e validar todo o seu corpo.")
     public void deveBuscarProdutoEspecificoPorId() {
         System.out.println("Iniciando o teste: deveBuscarProdutoEspecificoPorId");
 
