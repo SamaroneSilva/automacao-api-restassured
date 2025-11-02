@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# [NOVO] Adiciona permissões para o job poder escrever no GitHub Pages
+permissions:
+  contents: write # Permite o checkout e o push para a branch gh-pages
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -21,25 +25,24 @@ jobs:
           cache: 'maven'
 
       - name: Executar os testes com Maven
-        # Adicionamos '|| true' para que este step não "falhe" o build
-        # A falha será capturada pelo Allure
         run: mvn test || true
 
-      # --- NOVO STEP: Gerar o Relatório Allure ---
       - name: Gerar Relatório Allure
-        # [AQUI ESTÁ A MUDANÇA]
-        if: always() # Executa este step mesmo se o 'mvn test' falhar
+        if: always()
         uses: simple-elf/allure-report-action@v1.7
         with:
           results_path: allure-results
-          report_path: allure-report
+          report_path: allure-report # O relatório será gerado na pasta 'allure-report'
 
-      # --- NOVO STEP: Salvar o Relatório como Artefato ---
-      - name: Salvar Artefato do Relatório Allure
-        # [AQUI ESTÁ A MUDANÇA]
-        if: always() # Executa este step mesmo se o 'mvn test' falhar
-        uses: actions/upload-artifact@v4
+      # [MUDANÇA] Em vez de 'upload-artifact', vamos 'deploy'
+      - name: Deploy do Relatório para GitHub Pages
+        # Só executa este passo se o build for na branch 'main'
+        if: (always() && github.ref == 'refs/heads/main')
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          name: allure-report
-          path: allure-report
-
+          # Token que o GitHub Actions usa para autenticar
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Pasta que contém o relatório HTML (o mesmo do step anterior)
+          publish_dir: ./allure-report
+          # Opcional: mantém o histórico da branch gh-pages limpo
+          keep_files: false
