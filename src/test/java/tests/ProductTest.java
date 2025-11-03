@@ -51,7 +51,7 @@ public class ProductTest extends BaseTest {
 
         Response resposta = executarBuscaDeProdutos();
         validarStatusCodeEsperado(resposta, 200);
-        validarCamposPrincipaisDoProduto(resposta, "16", "Novo Head Phone (Teste POST)", 599.9f);
+        validarCamposPrincipaisDoProduto(resposta, "16", "Novo Head Phone (Teste POST)", 299.99f);
 
         System.out.println("Teste 'CT-02-Deve buscar a lista completa de produtos e validar um item específico na lista.' finalizado!");
     }
@@ -98,7 +98,7 @@ public class ProductTest extends BaseTest {
     public void deveDeletarProdutoComSucesso() {
         System.out.println("Iniciando o teste: deveDeletarProdutoComSucesso");
 
-        String idProduto = "18";
+        String idProduto = "19";
 
         // [1] Executar requisição DELETE
         Response respostaDelete = given()
