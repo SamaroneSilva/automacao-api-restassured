@@ -24,9 +24,9 @@ public class ProductTest extends BaseTest {
     // --- [TESTE POST (AGORA REFATORADO)] ---
     @Test
     // Adicionei uma @Description para manter o padrão
-    @Description("CT-03-Deve criar um novo produto com sucesso")
+    @Description("CT-01-Deve criar um novo produto com sucesso")
     public void deveCriarNovoProdutoComSucesso() {
-        System.out.println("Iniciando o teste: deveCriarNovoProdutoComSucesso");
+        System.out.println("Iniciando o teste: CT-01-Deve criar um novo produto com sucesso");
 
         // [1] Montar o corpo (payload) da requisição
         Map<String, Object> payload = montarPayloadProduto("Novo Head Phone (Teste POST)", 299.99f);
@@ -40,35 +40,92 @@ public class ProductTest extends BaseTest {
         // [4] Validar o corpo da resposta
         validarCorpoRespostaPost(resposta, "Novo Head Phone (Teste POST)");
 
-        System.out.println("Teste 'deveCriarNovoProdutoComSucesso' finalizado!");
+        System.out.println("Teste 'CT-01-Deve criar um novo produto com sucesso' finalizado!");
     }
 
     // --- TESTE GET (LISTA) ---
     @Test
-    @Description("CT-01-Deve buscar a lista completa de produtos e validar um item específico (ID 4) na lista.")
+    @Description("CT-02-Deve buscar a lista completa de produtos e validar um item específico na lista.")
     public void deveBuscarProdutosComSucesso() {
-        System.out.println("Iniciando o teste: deveBuscarProdutosComSucesso");
+        System.out.println("Iniciando o teste: CT-02-Deve buscar a lista completa de produtos e validar na lista.");
 
         Response resposta = executarBuscaDeProdutos();
         validarStatusCodeEsperado(resposta, 200);
-        validarCamposPrincipaisDoProduto(resposta, "3", "Novo Head Phone (Teste POST)", 299.99f);
+        validarCamposPrincipaisDoProduto(resposta, "4", "Novo Head Phone (Teste POST)", 299.99f);
 
-        System.out.println("Teste 'deveBuscarProdutosComSucesso' finalizado!");
+        System.out.println("Teste 'CT-02-Deve buscar a lista completa de produtos e validar um item específico na lista.' finalizado!");
     }
 
-    // --- TESTE GET (POR ID) ---
     @Test
-    @Description("CT-02-Deve buscar um produto específico pelo ID (ID 4) e validar todo o seu corpo.")
-    public void deveBuscarProdutoEspecificoPorId() {
-        System.out.println("Iniciando o teste: deveBuscarProdutoEspecificoPorId");
+    @Description("CT-03 - Deve atualizar um produto existente (ID 3) e validar se as alterações foram aplicadas com sucesso.")
+    public void deveAtualizarProdutoComSucesso() {
+        System.out.println("Iniciando o teste: deveAtualizarProdutoComSucesso");
 
         String idProduto = "3";
-        Response resposta = executarBuscaDeProdutoPorId(idProduto);
-        validarStatusCodeEsperado(resposta, 200);
-        validarCorpoProdutoEspecifico(resposta, idProduto);
 
-        System.out.println("Teste 'deveBuscarProdutoEspecificoPorId' finalizado!");
+        // [1] Montar o corpo atualizado
+        Map<String, Object> payloadAtualizado = new HashMap<>();
+        payloadAtualizado.put("name", "Teclado Automator - Atualizado");
+        payloadAtualizado.put("price", 599.90f);
+        payloadAtualizado.put("category", "Periféricos");
+        payloadAtualizado.put("description", "Produto atualizado via automação");
+
+        // [2] Executar requisição PUT
+        Response resposta = given()
+                .header("Content-Type", "application/json")
+                .pathParam("id", idProduto)
+                .body(payloadAtualizado)
+                .when()
+                .put("/products/{id}");
+
+        // [3] Validar o Status Code
+        validarStatusCodeEsperado(resposta, 200);
+
+        // [4] Validar o corpo da resposta
+        resposta.then().body(
+                "id", equalTo(idProduto),
+                "name", equalTo("Teclado Automator - Atualizado"),
+                "price", equalTo(599.90f),
+                "category", equalTo("Periféricos"),
+                "description", equalTo("Produto atualizado via automação")
+        );
+
+        System.out.println("Teste 'CT-03 - Deve atualizar um produto existente' finalizado com sucesso!");
     }
+
+    @Test
+    @Description("CT-04 - Deve deletar um produto existente (ID 3) e validar que ele foi removido com sucesso.")
+    public void deveDeletarProdutoComSucesso() {
+        System.out.println("Iniciando o teste: deveDeletarProdutoComSucesso");
+
+        String idProduto = "3";
+
+        // [1] Executar requisição DELETE
+        Response respostaDelete = given()
+                .pathParam("id", idProduto)
+                .when()
+                .delete("/products/{id}");
+
+        // [2] Validar o Status Code
+        validarStatusCodeEsperado(respostaDelete, 200);
+
+        // [3] Validar corpo da resposta (se a API retorna os dados deletados)
+        respostaDelete.then().body("id", equalTo(idProduto));
+        System.out.println("Produto ID " + idProduto + " deletado com sucesso!");
+
+        // [4] Opcional — Verificar que o produto realmente não existe mais
+        Response respostaGet = given()
+                .pathParam("id", idProduto)
+                .when()
+                .get("/products/{id}");
+
+        validarStatusCodeEsperado(respostaGet, 404);
+
+        System.out.println("Teste 'CT-04 - Deve deletar um produto existente' finalizado com sucesso!");
+    }
+
+
+
 
 
     // --- MÉTODOS AUXILIARES (COM @Step) ---
