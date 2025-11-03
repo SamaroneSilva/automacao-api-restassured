@@ -44,14 +44,14 @@ jobs:
       - name: Instalar e Gerar Relatório Allure
         if: always()
         run: |
-          echo "Instalando Allure CLI via SDKMAN..."
-          curl -s "https://get.sdkman.io" | bash
-          source "$HOME/.sdkman/bin/sdkman-init.sh"
-          sdk install allure
-          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          echo "Baixando Allure CLI oficial..."
+          ALLURE_VERSION=2.27.0
+          curl -Lo allure.zip https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.zip
+          unzip -q allure.zip -d $HOME/allure
+          chmod +x $HOME/allure/allure-${ALLURE_VERSION}/bin/allure
 
           echo "Gerando Allure report manualmente..."
-          $HOME/.sdkman/candidates/allure/current/bin/allure generate target/allure-results --clean -o allure-report
+          $HOME/allure/allure-${ALLURE_VERSION}/bin/allure generate target/allure-results --clean -o allure-report
 
           echo
           echo "Resumo do report gerado:"
