@@ -94,11 +94,11 @@ public class ProductTest extends BaseTest {
     }
 
     @Test
-    @Description("CT-04 - Deve deletar um produto existente (ID 3) e validar que ele foi removido com sucesso.")
+    @Description("CT-04 - Deve deletar um produto existente e validar que ele foi removido com sucesso.")
     public void deveDeletarProdutoComSucesso() {
         System.out.println("Iniciando o teste: deveDeletarProdutoComSucesso");
 
-        String idProduto = "8";
+        String idProduto = "5";
 
         // [1] Executar requisição DELETE
         Response respostaDelete = given()
