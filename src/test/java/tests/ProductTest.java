@@ -57,11 +57,11 @@ public class ProductTest extends BaseTest {
     }
 
     @Test
-    @Description("CT-03 - Deve atualizar um produto existente (ID 3) e validar se as alterações foram aplicadas com sucesso.")
+    @Description("CT-03 - Deve atualizar um produto existente (ID 2) e validar se as alterações foram aplicadas com sucesso.")
     public void deveAtualizarProdutoComSucesso() {
         System.out.println("Iniciando o teste: deveAtualizarProdutoComSucesso");
 
-        String idProduto = "3";
+        String idProduto = "2";
 
         // [1] Montar o corpo atualizado
         Map<String, Object> payloadAtualizado = new HashMap<>();
@@ -90,7 +90,7 @@ public class ProductTest extends BaseTest {
                 "description", equalTo("Produto atualizado via automação")
         );
 
-        System.out.println("Teste 'CT-03 - Deve atualizar um produto existente' finalizado com sucesso!");
+        System.out.println("Teste 'CT-02 - Deve atualizar um produto existente' finalizado com sucesso!");
     }
 
     @Test
@@ -98,7 +98,7 @@ public class ProductTest extends BaseTest {
     public void deveDeletarProdutoComSucesso() {
         System.out.println("Iniciando o teste: deveDeletarProdutoComSucesso");
 
-        String idProduto = "3";
+        String idProduto = "2";
 
         // [1] Executar requisição DELETE
         Response respostaDelete = given()
