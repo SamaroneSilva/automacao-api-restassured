@@ -6,9 +6,8 @@ on:
   pull_request:
     branches: [ "main" ]
 
-# [NOVO] Adiciona permissões para o job poder escrever no GitHub Pages
 permissions:
-  contents: write # Permite o checkout e o push para a branch gh-pages
+  contents: write
 
 jobs:
   build-and-test:
@@ -24,6 +23,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Limpar resultados anteriores
+        run: rm -rf target/allure-results allure-report
+
       - name: Executar os testes com Maven
         run: mvn test || true
 
@@ -31,18 +33,13 @@ jobs:
         if: always()
         uses: simple-elf/allure-report-action@v1.7
         with:
-          results_path: allure-results
-          report_path: allure-report # O relatório será gerado na pasta 'allure-report'
+          results_path: target/allure-results   # <-- Ajustado
+          report_path: allure-report
 
-      # [MUDANÇA] Em vez de 'upload-artifact', vamos 'deploy'
       - name: Deploy do Relatório para GitHub Pages
-        # Só executa este passo se o build for na branch 'main'
         if: (always() && github.ref == 'refs/heads/main')
         uses: peaceiris/actions-gh-pages@v3
         with:
-          # Token que o GitHub Actions usa para autenticar
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Pasta que contém o relatório HTML (o mesmo do step anterior)
           publish_dir: ./allure-report
-          # Opcional: mantém o histórico da branch gh-pages limpo
           keep_files: false
