@@ -41,11 +41,13 @@ jobs:
           echo "=== Arquivos de resultado ==="
           find target/allure-results -name '*-result.json' || echo "Nenhum arquivo encontrado"
 
-      - name: Instalar Allure CLI
+      - name: Instalar Allure CLI (via SDKMAN)
         if: always()
         run: |
-          sudo apt-get update
-          sudo apt-get install -y allure
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install allure
+          echo "$HOME/.sdkman/candidates/allure/current/bin" >> $GITHUB_PATH
 
       - name: Gerar relatório Allure manualmente
         if: always()
