@@ -62,7 +62,7 @@ public class ProductTest extends BaseTest {
     public void deveBuscarProdutoEspecificoPorId() {
         System.out.println("Iniciando o teste: deveBuscarProdutoEspecificoPorId");
 
-        String idProduto = "7";
+        String idProduto = "3";
         Response resposta = executarBuscaDeProdutoPorId(idProduto);
         validarStatusCodeEsperado(resposta, 200);
         validarCorpoProdutoEspecifico(resposta, idProduto);
@@ -134,8 +134,8 @@ public class ProductTest extends BaseTest {
         System.out.println("Validando o corpo do produto ID: " + idProduto);
         resposta.then().body(
                 "id", equalTo(idProduto),
-                "name", equalTo("Monitor Automator"),
-                "price", equalTo(1499.9F),
+                "name", equalTo("Novo Head Phone (Teste POST)"),
+                "price", equalTo(299.99F),
                 "category", equalTo("Periféricos")
         );
     }
