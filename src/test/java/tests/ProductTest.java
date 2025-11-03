@@ -51,7 +51,7 @@ public class ProductTest extends BaseTest {
 
         Response resposta = executarBuscaDeProdutos();
         validarStatusCodeEsperado(resposta, 200);
-        validarCamposPrincipaisDoProduto(resposta, "4", "Novo Head Phone (Teste POST)", 299.99f);
+        validarCamposPrincipaisDoProduto(resposta, "5", "Novo Head Phone (Teste POST)", 599.9f);
 
         System.out.println("Teste 'CT-02-Deve buscar a lista completa de produtos e validar um item específico na lista.' finalizado!");
     }
@@ -61,7 +61,7 @@ public class ProductTest extends BaseTest {
     public void deveAtualizarProdutoComSucesso() {
         System.out.println("Iniciando o teste: deveAtualizarProdutoComSucesso");
 
-        String idProduto = "2";
+        String idProduto = "10";
 
         // [1] Montar o corpo atualizado
         Map<String, Object> payloadAtualizado = new HashMap<>();
@@ -98,7 +98,7 @@ public class ProductTest extends BaseTest {
     public void deveDeletarProdutoComSucesso() {
         System.out.println("Iniciando o teste: deveDeletarProdutoComSucesso");
 
-        String idProduto = "2";
+        String idProduto = "8";
 
         // [1] Executar requisição DELETE
         Response respostaDelete = given()
@@ -192,7 +192,7 @@ public class ProductTest extends BaseTest {
         resposta.then().body(
                 "id", equalTo(idProduto),
                 "name", equalTo("Novo Head Phone (Teste POST)"),
-                "price", equalTo(299.99F),
+                "price", equalTo(99.99F),
                 "category", equalTo("Periféricos")
         );
     }
