@@ -1,3 +1,0 @@
-"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
-"passed","Sun Nov 02 16:01:23 GMT 2025","Sun Nov 02 16:01:27 GMT 2025","4211","","tests.ProductTest","","tests.ProductTest","deveBuscarProdutoEspecificoPorId","deveBuscarProdutoEspecificoPorId()","Deve buscar um produto específico pelo ID (ID 4) e validar todo o seu corpo."
-"passed","Sun Nov 02 16:01:27 GMT 2025","Sun Nov 02 16:01:28 GMT 2025","668","","tests.ProductTest","","tests.ProductTest","deveBuscarProdutosComSucesso","deveBuscarProdutosComSucesso()","Deve buscar a lista completa de produtos e validar um item específico (ID 4) na lista."
