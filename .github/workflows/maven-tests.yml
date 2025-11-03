@@ -28,6 +28,15 @@ jobs:
 
       - name: Executar os testes com Maven
         run: mvn test || true
+        
+        - name: Verificar arquivos gerados do Allure
+  if: always()
+  run: |
+    echo "Conteúdo da pasta target/allure-results:"
+    ls -lh target/allure-results
+    echo "Quantidade de arquivos:"
+    ls -1 target/allure-results | wc -l
+
 
       - name: Gerar Relatório Allure
         if: always()
