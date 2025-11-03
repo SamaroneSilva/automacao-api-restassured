@@ -134,8 +134,8 @@ public class ProductTest extends BaseTest {
         System.out.println("Validando o corpo do produto ID: " + idProduto);
         resposta.then().body(
                 "id", equalTo(idProduto),
-                "name", equalTo("Teclado Automator"),
-                "price", equalTo(499.9f),
+                "name", equalTo("Monitor Automator"),
+                "price", equalTo(1499.9F),
                 "category", equalTo("Periféricos")
         );
     }
