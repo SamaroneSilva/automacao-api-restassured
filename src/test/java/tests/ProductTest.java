@@ -68,4 +68,49 @@ public class ProductTest extends BaseTest {
                         "find { it.id == '" + idProduto + "' }.price", equalTo(precoProduto)
                 );
     }
+
+    // --- Cenário: Buscar produto específico pelo ID ---
+    @Test
+    @Description("CT-02 - Deve buscar um produto específico pelo ID e validar seu corpo completo.")
+    public void deveBuscarProdutoPorIdComSucesso() {
+
+        givenQueOProdutoExisteComId("7");
+        Response resposta = quandoEuBuscoOProdutoPeloId("7");
+        entaoOStatusCodeDeveSer(resposta, 200);
+        eOBodyDeveConterOsDadosCorretos(resposta, "7", "Monitor Automator", 1499.9f, "Periféricos");
+    }
+
+    // --- Etapas (Steps) no estilo Gherkin ---
+
+    @Step("Dado que o produto com ID {idProduto} existe")
+    private void givenQueOProdutoExisteComId(String idProduto) {
+        // (Aqui poderíamos futuramente validar se o produto existe antes de buscar)
+        System.out.println("Dado que o produto com ID " + idProduto + " existe");
+    }
+
+    @Step("Quando eu busco o produto pelo ID {idProduto}")
+    private Response quandoEuBuscoOProdutoPeloId(String idProduto) {
+        System.out.println("Quando eu busco o produto pelo ID: " + idProduto);
+        return given()
+                .pathParam("id", idProduto)
+                .when()
+                .get("/products/{id}");
+    }
+
+    @Step("Então o status code deve ser {statusCode}")
+    private void entaoOStatusCodeDeveSer(Response resposta, int statusCode) {
+        resposta.then().statusCode(statusCode);
+        System.out.println("Então o status code é " + statusCode);
+    }
+
+    @Step("E o corpo deve conter os dados corretos do produto")
+    private void eOBodyDeveConterOsDadosCorretos(Response resposta, String id, String nome, float preco, String categoria) {
+        resposta.then().body(
+                "id", equalTo(id),
+                "name", equalTo(nome),
+                "price", equalTo(preco),
+                "category", equalTo(categoria)
+        );
+        System.out.println("E o corpo contém os dados corretos do produto ID " + id);
+    }
 }
