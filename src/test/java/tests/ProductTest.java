@@ -51,7 +51,7 @@ public class ProductTest extends BaseTest {
 
         Response resposta = executarBuscaDeProdutos();
         validarStatusCodeEsperado(resposta, 200);
-        validarCamposPrincipaisDoProduto(resposta, "7", "Teclado Automator", 499.9f);
+        validarCamposPrincipaisDoProduto(resposta, "3", "Novo Head Phone (Teste POST)", 299.99f);
 
         System.out.println("Teste 'deveBuscarProdutosComSucesso' finalizado!");
     }
