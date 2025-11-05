@@ -244,7 +244,7 @@ public class ProductTest extends BaseTest {
         int totalRequisicoes = 15;
 
         // limite máximo aceitável (em milissegundos)
-        long limiteMs = 80;
+        long limiteMs = 10;
         List<Long> tempos = new ArrayList<>();
 
         System.out.println("🚀 Iniciando teste de performance com " + totalRequisicoes + " requisições...");
