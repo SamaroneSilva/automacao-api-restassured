@@ -9,9 +9,12 @@ public class BaseTest {
     public static void setup() {
         RestAssured.baseURI = "https://68f81403deff18f212b515ee.mockapi.io";
 
-        // Ajuste aqui: Remova o /products desta linha
-        RestAssured.basePath = "/testesdeapi";
 
+        RestAssured.basePath = "/testesdeapi/products";
+
+        // Habilita log automático de request/response em caso de falha
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+
+        System.out.println("✅ Base configurada em: " + RestAssured.baseURI + RestAssured.basePath);
     }
 }

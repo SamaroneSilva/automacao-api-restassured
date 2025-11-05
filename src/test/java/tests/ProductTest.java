@@ -1,209 +1,293 @@
-package tests;
+ package tests;
 
 import config.BaseTest;
+import io.qameta.allure.Description;
+import io.qameta.allure.Step;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-// --- Imports do Allure ---
-import io.qameta.allure.Description;
-import io.qameta.allure.Feature;
-import io.qameta.allure.Step;
-// -------------------------
-
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
-import static io.restassured.RestAssured.*;
+import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-// [MUDANÇA] Mudei o @Feature para um nome mais genérico, já que agora temos POST
-@Feature("Produtos - API")
 public class ProductTest extends BaseTest {
 
-    // --- [TESTE POST (AGORA REFATORADO)] ---
+    // Lista para armazenar IDs criados durante os testes
+    private static final List<String> produtosCriados = new ArrayList<>();
+
+    // ============================================================
+    // ================ CT-01 - GET Lista ==========================
+    // ============================================================
+
     @Test
-    // Adicionei uma @Description para manter o padrão
-    @Description("CT-01-Deve criar um novo produto com sucesso")
+    @Description("01 - Deve buscar a lista completa de produtos e validar a estrutura e consistência da resposta.")
+    public void deveBuscarListaCompletaDeProdutosComSucesso() {
+        Response resposta = quandoEuBuscoAListaDeProdutos();
+
+        entaoOStatusCodeDeveSer(resposta, 200);
+        eARespostaDeveConterUmaListaDeProdutosValida(resposta);
+        eCadaProdutoDeveTerCamposObrigatorios(resposta);
+    }
+
+    // ============================================================
+    // ================ CT-02 - GET por ID =========================
+    // ============================================================
+
+    @Test
+    @Description("02 - Deve buscar um produto específico por ID e validar os campos detalhados do retorno.")
+    public void deveBuscarProdutoPorIdComSucesso() {
+        // Cria massa temporária para garantir que o ID existe
+        String nomeProduto = "Produto-" + UUID.randomUUID().toString().substring(0, 5);
+        Response respostaCriacao = quandoEuCrioUmNovoProduto(nomeProduto, "Categoria Teste", 199.90f);
+        String idProduto = respostaCriacao.jsonPath().getString("id");
+        produtosCriados.add(idProduto);
+
+        // Busca produto criado
+        Response resposta = quandoEuBuscoProdutoPorId(idProduto);
+        entaoOStatusCodeDeveSer(resposta, 200);
+        eOProdutoRetornadoDeveSerValido(resposta, idProduto);
+    }
+
+    // ============================================================
+    // ================ CT-03 - POST (Criar) =======================
+    // ============================================================
+
+    @Test
+    @Description("03 - Deve criar um novo produto e validar o retorno do cadastro.")
     public void deveCriarNovoProdutoComSucesso() {
-        System.out.println("Iniciando o teste: CT-01-Deve criar um novo produto com sucesso");
+        String nomeProduto = "Produto-" + UUID.randomUUID().toString().substring(0, 5);
+        Response resposta = quandoEuCrioUmNovoProduto(nomeProduto, "Categoria Teste", 199.90f);
 
-        // [1] Montar o corpo (payload) da requisição
-        Map<String, Object> payload = montarPayloadProduto("Novo Head Phone (Teste POST)", 299.99f);
+        String idProduto = resposta.jsonPath().getString("id");
+        produtosCriados.add(idProduto);
 
-        // [2] Executar a requisição
-        Response resposta = executarPostProduto(payload);
-
-        // [3] Validar o Status Code
-        validarStatusCodeEsperado(resposta, 201); // 201 Created
-
-        // [4] Validar o corpo da resposta
-        validarCorpoRespostaPost(resposta, "Novo Head Phone (Teste POST)");
-
-        System.out.println("Teste 'CT-01-Deve criar um novo produto com sucesso' finalizado!");
+        entaoOStatusCodeDeveSer(resposta, 201);
+        eOBodyDeveConterOsDadosDoProdutoCriado(resposta, nomeProduto, "Categoria Teste");
     }
 
-    // --- TESTE GET (LISTA) ---
-    @Test
-    @Description("CT-02-Deve buscar a lista completa de produtos e validar um item específico na lista.")
-    public void deveBuscarProdutosComSucesso() {
-        System.out.println("Iniciando o teste: CT-02-Deve buscar a lista completa de produtos e validar na lista.");
-
-        Response resposta = executarBuscaDeProdutos();
-        validarStatusCodeEsperado(resposta, 200);
-        validarCamposPrincipaisDoProduto(resposta, "16", "Novo Head Phone (Teste POST)", 299.99f);
-
-        System.out.println("Teste 'CT-02-Deve buscar a lista completa de produtos e validar um item específico na lista.' finalizado!");
-    }
+    // ============================================================
+    // ================ CT-04 - PUT (Atualizar) ===================
+    // ============================================================
 
     @Test
-    @Description("CT-03 - Deve atualizar um produto existente (ID 2) e validar se as alterações foram aplicadas com sucesso.")
+    @Description("04 - Deve atualizar um produto existente e validar os dados atualizados.")
     public void deveAtualizarProdutoComSucesso() {
-        System.out.println("Iniciando o teste: deveAtualizarProdutoComSucesso");
+        String nomeOriginal = "Produto-" + UUID.randomUUID().toString().substring(0, 5);
+        Response respostaCriacao = quandoEuCrioUmNovoProduto(nomeOriginal, "Categoria Original", 100.0f);
+        String idProduto = respostaCriacao.jsonPath().getString("id");
+        produtosCriados.add(idProduto);
 
-        String idProduto = "10";
+        String nomeAtualizado = nomeOriginal + "-Atualizado";
+        Response respostaUpdate = quandoEuAtualizoProduto(idProduto, nomeAtualizado, "Categoria Atualizada", 250.0f);
 
-        // [1] Montar o corpo atualizado
-        Map<String, Object> payloadAtualizado = new HashMap<>();
-        payloadAtualizado.put("name", "Teclado Automator - Atualizado");
-        payloadAtualizado.put("price", 599.90f);
-        payloadAtualizado.put("category", "Periféricos");
-        payloadAtualizado.put("description", "Produto atualizado via automação");
-
-        // [2] Executar requisição PUT
-        Response resposta = given()
-                .header("Content-Type", "application/json")
-                .pathParam("id", idProduto)
-                .body(payloadAtualizado)
-                .when()
-                .put("/products/{id}");
-
-        // [3] Validar o Status Code
-        validarStatusCodeEsperado(resposta, 200);
-
-        // [4] Validar o corpo da resposta
-        resposta.then().body(
-                "id", equalTo(idProduto),
-                "name", equalTo("Teclado Automator - Atualizado"),
-                "price", equalTo(599.90f),
-                "category", equalTo("Periféricos"),
-                "description", equalTo("Produto atualizado via automação")
-        );
-
-        System.out.println("Teste 'CT-02 - Deve atualizar um produto existente' finalizado com sucesso!");
+        entaoOStatusCodeDeveSer(respostaUpdate, 200);
+        eOBodyDeveConterOsDadosDoProdutoAtualizado(respostaUpdate, nomeAtualizado, "Categoria Atualizada");
     }
+
+    // ============================================================
+    // ================ CT-05 - DELETE =============================
+    // ============================================================
 
     @Test
-    @Description("CT-04 - Deve deletar um produto existente e validar que ele foi removido com sucesso.")
-    public void deveDeletarProdutoComSucesso() {
-        System.out.println("Iniciando o teste: deveDeletarProdutoComSucesso");
+    @Description("05 - Deve excluir um produto existente e garantir que não pode mais ser consultado.")
+    public void deveExcluirProdutoComSucesso() {
+        String nome = "Produto-" + UUID.randomUUID().toString().substring(0, 5);
+        Response respostaCriacao = quandoEuCrioUmNovoProduto(nome, "Categoria Delete", 50.0f);
+        String idProduto = respostaCriacao.jsonPath().getString("id");
 
-        String idProduto = "19";
+        Response respostaDelete = quandoEuExcluoProduto(idProduto);
+        entaoOStatusCodeDeveSer(respostaDelete, 200);
 
-        // [1] Executar requisição DELETE
-        Response respostaDelete = given()
-                .pathParam("id", idProduto)
-                .when()
-                .delete("/products/{id}");
+        // Não precisa adicionar na lista de limpeza, pois já foi deletado
+        Response respostaBusca = quandoEuBuscoProdutoPorId(idProduto);
+        entaoOStatusCodeDeveSer(respostaBusca, 404);
+    }
 
-        // [2] Validar o Status Code
-        validarStatusCodeEsperado(respostaDelete, 200);
+    // ============================================================
+    // ================ @AfterEach (Limpeza) =======================
+    // ============================================================
 
-        // [3] Validar corpo da resposta (se a API retorna os dados deletados)
-        respostaDelete.then().body("id", equalTo(idProduto));
-        System.out.println("Produto ID " + idProduto + " deletado com sucesso!");
-
-        // [4] Opcional — Verificar que o produto realmente não existe mais
-        Response respostaGet = given()
-                .pathParam("id", idProduto)
-                .when()
-                .get("/products/{id}");
-
-        validarStatusCodeEsperado(respostaGet, 404);
-
-        System.out.println("Teste 'CT-04 - Deve deletar um produto existente' finalizado com sucesso!");
+    @AfterEach
+    @Description("Limpa a massa criada durante o teste")
+    public void limparProdutosCriados() {
+        for (String id : produtosCriados) {
+            try {
+                Response resposta = quandoEuExcluoProduto(id);
+                if (resposta.statusCode() == 200 || resposta.statusCode() == 204) {
+                    System.out.println("🧹 Produto ID " + id + " removido com sucesso após o teste.");
+                }
+            } catch (Exception e) {
+                System.out.println("⚠️ Falha ao excluir produto ID: " + id + " — talvez já tenha sido removido.");
+            }
+        }
+        produtosCriados.clear();
     }
 
 
 
+    // ============================================================
+    // ================ Métodos de Ação ============================
+    // ============================================================
 
-
-    // --- MÉTODOS AUXILIARES (COM @Step) ---
-
-    // Métodos de Requisição (Given/When)
-
-    @Step("Executar requisição GET para /products")
-    private Response executarBuscaDeProdutos() {
-        return given()
-                .when()
-                .get("/products");
+    @Step("Quando eu busco a lista de produtos")
+    private Response quandoEuBuscoAListaDeProdutos() {
+        return given().when().get().then().extract().response();
     }
 
-    @Step("Executar requisição GET para /products/{idProduto}")
-    private Response executarBuscaDeProdutoPorId(String idProduto) {
-        return given()
-                .pathParam("id", idProduto)
-                .when()
-                .get("/products/{id}");
+    @Step("Quando eu busco o produto de ID {idProduto}")
+    private Response quandoEuBuscoProdutoPorId(String idProduto) {
+        return given().when().get("/" + idProduto).then().extract().response();
     }
 
-    // [NOVO MÉTODO AUXILIAR]
-    @Step("Montar payload do produto: {nome} - {preco}")
-    private Map<String, Object> montarPayloadProduto(String nome, float preco) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("name", nome);
-        payload.put("price", preco);
-        payload.put("category", "Periféricos");
-        payload.put("description", "Produto criado via automação");
-        return payload;
-    }
+    @Step("Quando eu crio um novo produto com nome {nomeProduto}")
+    private Response quandoEuCrioUmNovoProduto(String nomeProduto, String categoria, float preco) {
+        Map<String, Object> produto = new HashMap<>();
+        produto.put("name", nomeProduto);
+        produto.put("category", categoria);
+        produto.put("price", preco);
 
-    // [NOVO MÉTODO AUXILIAR]
-    @Step("Executar requisição POST para /products")
-    private Response executarPostProduto(Map<String, Object> payload) {
         return given()
                 .header("Content-Type", "application/json")
-                .body(payload)
+                .body(produto)
                 .when()
-                .post("/products");
+                .post()
+                .then()
+                .extract()
+                .response();
     }
 
-    // Métodos de Validação (Then)
+    @Step("Quando eu atualizo o produto ID {idProduto}")
+    private Response quandoEuAtualizoProduto(String idProduto, String novoNome, String novaCategoria, float novoPreco) {
+        Map<String, Object> produtoAtualizado = new HashMap<>();
+        produtoAtualizado.put("name", novoNome);
+        produtoAtualizado.put("category", novaCategoria);
+        produtoAtualizado.put("price", novoPreco);
 
-    @Step("Validar Status Code esperado: {statusCodeEsperado}")
-    private void validarStatusCodeEsperado(Response resposta, int statusCodeEsperado) {
-        System.out.println("Validando status code...");
-        resposta.then().statusCode(statusCodeEsperado);
+        return given()
+                .header("Content-Type", "application/json")
+                .body(produtoAtualizado)
+                .when()
+                .put("/" + idProduto)
+                .then()
+                .extract()
+                .response();
     }
 
-    @Step("Validar campos principais (Nome e Preço) do produto ID: {idProduto} na lista")
-    private void validarCamposPrincipaisDoProduto(Response resposta, String idProduto, String nomeProduto, float precoProduto) {
-        System.out.println("Validando campos principais do produto ID: " + idProduto);
-
-        resposta.then().body(
-                "find { it.id == '" + idProduto + "' }.name", equalTo(nomeProduto),
-                "find { it.id == '" + idProduto + "' }.price", equalTo(precoProduto)
-        );
+    @Step("Quando eu excluo o produto ID {idProduto}")
+    private Response quandoEuExcluoProduto(String idProduto) {
+        return given().when().delete("/" + idProduto).then().extract().response();
     }
 
-    @Step("Validar corpo completo do produto ID: {idProduto}")
-    private void validarCorpoProdutoEspecifico(Response resposta, String idProduto) {
-        System.out.println("Validando o corpo do produto ID: " + idProduto);
-        resposta.then().body(
-                "id", equalTo(idProduto),
-                "name", equalTo("Novo Head Phone (Teste POST)"),
-                "price", equalTo(99.99F),
-                "category", equalTo("Periféricos")
-        );
+    // ============================================================
+    // ================ Métodos de Validação ======================
+    // ============================================================
+
+    @Step("Então o status code deve ser {statusEsperado}")
+    private void entaoOStatusCodeDeveSer(Response resposta, int statusEsperado) {
+        resposta.then().statusCode(statusEsperado);
+        System.out.println("🔹 Status code validado: " + statusEsperado);
     }
 
-    // [NOVO MÉTODO AUXILIAR]
-    @Step("Validar corpo da resposta da criação para o produto: {nomeProduto}")
-    private void validarCorpoRespostaPost(Response resposta, String nomeProduto) {
-        System.out.println("Validando corpo da resposta do POST...");
-        resposta.then().body(
-                "name", equalTo(nomeProduto),
-                "id", is(notNullValue())
-        );
+    @Step("E a resposta deve conter uma lista de produtos válida")
+    private void eARespostaDeveConterUmaListaDeProdutosValida(Response resposta) {
+        resposta.then().body("$", not(empty()));
+        resposta.then().body("size()", greaterThan(0));
+        System.out.println("✅ Lista de produtos retornada com sucesso!");
     }
+
+    @Step("E cada produto deve conter campos obrigatórios")
+    private void eCadaProdutoDeveTerCamposObrigatorios(Response resposta) {
+        var lista = resposta.jsonPath().getList("$");
+        for (int i = 0; i < lista.size(); i++) {
+            resposta.then().body("[" + i + "].id", notNullValue());
+            resposta.then().body("[" + i + "].name", notNullValue());
+        }
+        System.out.println("🧩 Todos os produtos possuem campos obrigatórios.");
+    }
+
+    @Step("E o produto retornado deve ser válido para o ID {idProduto}")
+    private void eOProdutoRetornadoDeveSerValido(Response resposta, String idProduto) {
+        resposta.then().body("id", equalTo(idProduto));
+        resposta.then().body("name", notNullValue());
+        resposta.then().body("createdAt", notNullValue());
+        System.out.println("🔍 Produto retornado com dados válidos.");
+    }
+
+    @Step("E o corpo deve conter os dados corretos do produto criado")
+    private void eOBodyDeveConterOsDadosDoProdutoCriado(Response resposta, String nome, String categoria) {
+        resposta.then().body("name", equalTo(nome));
+        resposta.then().body("category", equalTo(categoria));
+        System.out.println("🟢 Produto criado validado com sucesso.");
+    }
+
+    @Step("E o corpo deve conter os dados corretos do produto atualizado")
+    private void eOBodyDeveConterOsDadosDoProdutoAtualizado(Response resposta, String nome, String categoria) {
+        resposta.then().body("name", equalTo(nome));
+        resposta.then().body("category", equalTo(categoria));
+        System.out.println("🟡 Produto atualizado validado com sucesso.");
+    }
+
+    // ============================================================
+    // ================ CT-06 - PERFORMANCE =======================
+    // ============================================================
+
+    @Test
+    @Description("CT-06 - Deve validar o tempo médio de resposta da API em múltiplas execuções consecutivas.")
+    public void deveValidarTempoDeRespostaDaApi() {
+        // número de chamadas GET consecutivas
+        int totalRequisicoes = 15;
+
+        // limite máximo aceitável (em milissegundos)
+        long limiteMs = 600;
+        List<Long> tempos = new ArrayList<>();
+
+        System.out.println("🚀 Iniciando teste de performance com " + totalRequisicoes + " requisições...");
+
+        for (int i = 1; i <= totalRequisicoes; i++) {
+            long tempo = medirTempoDeRespostaDaRequisicao(i);
+            tempos.add(tempo);
+        }
+
+        long tempoMax = tempos.stream().max(Long::compare).orElse(0L);
+        long tempoMin = tempos.stream().min(Long::compare).orElse(0L);
+        double tempoMedio = tempos.stream().mapToLong(Long::longValue).average().orElse(0.0);
+
+        System.out.println("\n📊 Resultados de Performance:");
+        System.out.println("➡️  Total de requisições: " + totalRequisicoes);
+        System.out.println("⏱️  Tempo mínimo: " + tempoMin + " ms");
+        System.out.println("⏱️  Tempo máximo: " + tempoMax + " ms");
+        System.out.println("⚙️  Tempo médio: " + String.format("%.2f", tempoMedio) + " ms");
+
+        if (tempoMedio > limiteMs) {
+            System.out.println("⚠️ Tempo médio (" + tempoMedio + " ms) excedeu o limite de " + limiteMs + " ms!");
+            throw new AssertionError("Tempo médio acima do esperado: " + tempoMedio + " ms");
+        } else {
+            System.out.println("✅ Tempo médio dentro do limite esperado (" + tempoMedio + " ms).");
+        }
+    }
+
+    @Step("Medindo tempo de resposta da requisição número {numero}")
+    private long medirTempoDeRespostaDaRequisicao(int numero) {
+        long inicio = System.currentTimeMillis();
+
+        Response resposta = given()
+                .when()
+                .get()
+                .then()
+                .extract()
+                .response();
+
+        long fim = System.currentTimeMillis();
+        long tempoTotal = fim - inicio;
+
+        System.out.println("➡️  Requisição " + numero + " — Status: " + resposta.statusCode() + " — Tempo: " + tempoTotal + " ms");
+        return tempoTotal;
+    }
+
 }
